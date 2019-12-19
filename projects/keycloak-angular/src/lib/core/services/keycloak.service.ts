@@ -455,18 +455,25 @@ export class KeycloakService {
 
   /**
    * Returns the authenticated token, calling updateToken to get a refreshed one if
-   * necessary. If the session is expired this method calls the login method for a new login.
+   * necessary. If the session is expired and the forceLogin flag is set to true,
+   * this method calls the login method for a new login, otherwise rejects.
    *
+   * @param forceLogin
+   * Flag whether a login should be enforced if the session is expired.
    * @returns
    * Promise with the generated token.
    */
-  getToken(): Promise<string> {
+  getToken(forceLogin: boolean = true): Promise<string> {
     return new Promise(async (resolve, reject) => {
       try {
         await this.updateToken(10);
         resolve(this._instance.token);
       } catch (error) {
-        this.login();
+        if (forceLogin) {
+          this.login();
+        } else {
+          reject(error);
+        }
       }
     });
   }

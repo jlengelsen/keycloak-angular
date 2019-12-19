@@ -63,5 +63,33 @@ describe('KeycloakService', () => {
         expect(excludedRegex2.httpMethods[0]).toBe('GET');
       }
     ));
+
+    it('Should not call login in error case if getToken is called with forceLogin false', inject(
+      [KeycloakService],
+      async (service: KeycloakService) => {
+        service.updateToken = async () => Promise.reject(new Error('test'));
+        spyOn(service, 'login');
+
+        let error: Error;
+        await service.getToken(false).catch(e => error = e);
+
+        expect(error).toBeDefined();
+        expect(service.login).not.toHaveBeenCalled();
+      }
+    ));
+
+    it('Should return correct token in success case if getToken is called with forceLogin false', inject(
+      [KeycloakService],
+      async (service: KeycloakService) => {
+        service.updateToken = async () => Promise.resolve(true);
+        (service['_instance'] as any) = {
+          token: 'testToken'
+        };
+
+        const token = await service.getToken(false);
+
+        expect(token).toEqual('testToken');
+      }
+    ));
   });
 });
